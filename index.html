@@ -10,7 +10,7 @@
             text-align: center;
         }
         .menu {
-            display: none;
+            display: flex;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -24,17 +24,14 @@
         #orderList {
             margin-top: 20px;
         }
-        #qrScanner {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
-    <h1>Scan QR Code to View Menu</h1>
-    <button id="qrScanner">Scan QR Code</button>
+    <h1>Restaurant Menu</h1>
     <div class="menu" id="menu"></div>
     <h2>Your Order</h2>
     <ul id="orderList"></ul>
+
     <script>
         const menuItems = [
             { name: "Pizza", price: 200 },
@@ -58,21 +55,16 @@
             { name: "Cold Drink", price: 50 },
             { name: "Coffee", price: 70 }
         ];
-        
+
         const menuContainer = document.getElementById("menu");
         const orderList = document.getElementById("orderList");
-        const qrScanner = document.getElementById("qrScanner");
 
-        qrScanner.onclick = () => {
-            qrScanner.style.display = "none";
-            menuContainer.style.display = "flex";
-        };
-
+        // Populate the menu items
         menuItems.forEach(item => {
             const div = document.createElement("div");
             div.classList.add("item");
             div.textContent = `${item.name} - ₹${item.price}`;
-            div.onclick = () => addToOrder(item);
+            div.onclick = () => addToOrder(item);  // Add item to the order
             menuContainer.appendChild(div);
         });
 
