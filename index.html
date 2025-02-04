@@ -20,10 +20,6 @@
             margin: 10px;
             width: 200px;
             cursor: pointer;
-            background-color: #f9f9f9;
-        }
-        .item:hover {
-            background-color: #e0e0e0;
         }
         #orderList {
             margin-top: 20px;
@@ -32,14 +28,18 @@
 </head>
 <body>
     <h1>Restaurant Menu</h1>
-    <div>
-        <input type="text" id="name" placeholder="Enter Your Name">
-        <input type="text" id="table" placeholder="Enter Table Number">
-    </div>
+    
+    <label for="name">Name:</label>
+    <input type="text" id="name" placeholder="Enter your name">
+    
+    <label for="table">Table Number:</label>
+    <input type="text" id="table" placeholder="Enter table number">
+    
     <div class="menu" id="menu"></div>
     <h2>Your Order</h2>
     <ul id="orderList"></ul>
-    <button onclick="submitOrder()">Submit Order</button>
+    
+    <button onclick="placeOrder()">Submit Order</button>
 
     <script>
         const menuItems = [
@@ -62,29 +62,13 @@
             { name: "Ice Cream", price: 90 },
             { name: "Gulab Jamun", price: 100 },
             { name: "Cold Drink", price: 50 },
-            { name: "Coffee", price: 70 },
-            { name: "Tea", price: 40 },
-            { name: "Momos", price: 120 },
-            { name: "Spring Rolls", price: 110 },
-            { name: "Chowmein", price: 130 },
-            { name: "Chili Paneer", price: 160 },
-            { name: "Tandoori Chicken", price: 320 },
-            { name: "Butter Naan", price: 50 },
-            { name: "Paneer Butter Masala", price: 220 },
-            { name: "Mutton Rogan Josh", price: 350 },
-            { name: "Malai Kofta", price: 240 },
-            { name: "Kadhai Paneer", price: 210 },
-            { name: "Veg Thali", price: 300 },
-            { name: "Non-Veg Thali", price: 400 },
-            { name: "Masala Dosa", price: 160 },
-            { name: "Chicken 65", price: 280 },
-            { name: "Prawns Masala", price: 450 }
+            { name: "Coffee", price: 70 }
         ];
 
         const menuContainer = document.getElementById("menu");
         const orderList = document.getElementById("orderList");
-        let order = [];
 
+        // Populate the menu items
         menuItems.forEach(item => {
             const div = document.createElement("div");
             div.classList.add("item");
@@ -94,42 +78,45 @@
         });
 
         function addToOrder(item) {
-            order.push(item);
             const li = document.createElement("li");
             li.textContent = `${item.name} - ₹${item.price}`;
             orderList.appendChild(li);
         }
 
-        function submitOrder() {
+        function placeOrder() {
             const name = document.getElementById("name").value;
             const table = document.getElementById("table").value;
-            
-            if (!name || !table || order.length === 0) {
-                alert("Please enter name, table number, and select items.");
+            const orderItems = Array.from(document.querySelectorAll("#orderList li")).map(item => item.textContent);
+
+            if (!name || !table || orderItems.length === 0) {
+                alert("Please enter name, table number, and select items!");
                 return;
             }
-            
-            const orderDetails = order.map(item => item.name).join(", ");
-            const data = new URLSearchParams();
-            data.append("name", name);
-            data.append("table", table);
-            data.append("order", orderDetails);
 
-            fetch("https://script.google.com/macros/s/AKfycbxWdHV6fckb2blvMJjMpwNlsydj5txMHEAWadm_2UgG-dgnkyaouxmoIcTkN1uwxKRa/exec", {
+            const apiUrl = "https://script.google.com/macros/s/AKfycbz2JYl7eHAq3FFQZpt38hmmB9DnaL2jTT-k-Eno71T9mjAUfj0Hswf2js8mG_pW57wwYw/exec";
+
+            const orderData = {
+                name: name,
+                table: table,
+                order: orderItems
+            };
+
+            fetch(apiUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: data
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderData)
             })
-            .then(response => response.text())
+            .then(response => response.json())
             .then(data => {
-                alert("Order placed successfully!");
-                console.log("Response from server:", data);
-                orderList.innerHTML = "";
-                order = [];
+                if (data.status === "success") {
+                    alert("Order placed successfully!");
+                    document.getElementById("orderList").innerHTML = ""; // Clear the order list
+                } else {
+                    alert("Error placing order: " + data.message);
+                }
             })
             .catch(error => {
-                console.error("Error:", error);
-                alert("Error placing order. Please try again.");
+                alert("Error placing order: " + error);
             });
         }
     </script>
