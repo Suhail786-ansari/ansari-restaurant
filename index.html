@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ansari Restaurant Menu</title>
+    <title>Restaurant Menu</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,29 +20,27 @@
             margin: 10px;
             width: 200px;
             cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        .item:hover {
+            background-color: #e0e0e0;
         }
         #orderList {
             margin-top: 20px;
         }
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: green;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
-    <h1>Ansari Restaurant Menu</h1>
+    <h1>Restaurant Menu</h1>
+    <div>
+        <input type="text" id="name" placeholder="Enter Your Name">
+        <input type="text" id="table" placeholder="Enter Table Number">
+    </div>
     <div class="menu" id="menu"></div>
     <h2>Your Order</h2>
     <ul id="orderList"></ul>
-    <input type="text" id="customerName" placeholder="Enter your name">
-    <input type="text" id="tableNumber" placeholder="Table Number">
     <button onclick="submitOrder()">Submit Order</button>
-    
+
     <script>
         const menuItems = [
             { name: "Pizza", price: 200 },
@@ -54,12 +52,38 @@
             { name: "Soup", price: 110 },
             { name: "Grilled Chicken", price: 250 },
             { name: "Fish Curry", price: 300 },
-            { name: "Rice Bowl", price: 180 }
+            { name: "Rice Bowl", price: 180 },
+            { name: "Noodles", price: 140 },
+            { name: "Dal Tadka", price: 130 },
+            { name: "Paneer Tikka", price: 220 },
+            { name: "Biryani", price: 250 },
+            { name: "Roti", price: 30 },
+            { name: "Dosa", price: 140 },
+            { name: "Ice Cream", price: 90 },
+            { name: "Gulab Jamun", price: 100 },
+            { name: "Cold Drink", price: 50 },
+            { name: "Coffee", price: 70 },
+            { name: "Tea", price: 40 },
+            { name: "Momos", price: 120 },
+            { name: "Spring Rolls", price: 110 },
+            { name: "Chowmein", price: 130 },
+            { name: "Chili Paneer", price: 160 },
+            { name: "Tandoori Chicken", price: 320 },
+            { name: "Butter Naan", price: 50 },
+            { name: "Paneer Butter Masala", price: 220 },
+            { name: "Mutton Rogan Josh", price: 350 },
+            { name: "Malai Kofta", price: 240 },
+            { name: "Kadhai Paneer", price: 210 },
+            { name: "Veg Thali", price: 300 },
+            { name: "Non-Veg Thali", price: 400 },
+            { name: "Masala Dosa", price: 160 },
+            { name: "Chicken 65", price: 280 },
+            { name: "Prawns Masala", price: 450 }
         ];
 
         const menuContainer = document.getElementById("menu");
         const orderList = document.getElementById("orderList");
-        let orders = [];
+        let order = [];
 
         menuItems.forEach(item => {
             const div = document.createElement("div");
@@ -70,45 +94,43 @@
         });
 
         function addToOrder(item) {
-            orders.push(item);
+            order.push(item);
             const li = document.createElement("li");
             li.textContent = `${item.name} - ₹${item.price}`;
             orderList.appendChild(li);
         }
 
         function submitOrder() {
-            const customerName = document.getElementById("customerName").value;
-            const tableNumber = document.getElementById("tableNumber").value;
+            const name = document.getElementById("name").value;
+            const table = document.getElementById("table").value;
             
-            if (!customerName || !tableNumber || orders.length === 0) {
-                alert("Please enter your name, table number, and add items to order.");
+            if (!name || !table || order.length === 0) {
+                alert("Please enter name, table number, and select items.");
                 return;
             }
+            
+            const orderDetails = order.map(item => item.name).join(", ");
+            const data = new URLSearchParams();
+            data.append("name", name);
+            data.append("table", table);
+            data.append("order", orderDetails);
 
-            orders.forEach(order => {
-                fetch("https://script.google.com/macros/s/AKfycbxWdHV6fckb2blvMJjMpwNlsydj5txMHEAWadm_2UgG-dgnkyaouxmoIcTkN1uwxKRa/exec", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        customerName: customerName,
-                        tableNumber: tableNumber,
-                        menuItem: order.name,
-                        quantity: 1,
-                        price: order.price
-                    })
-                })
-                .then(response => response.text())
-                .then(data => {
-                    console.log("Order Sent: ", data);
-                    alert("Order successfully placed!");
-                })
-                .catch(error => console.error("Error:", error));
+            fetch("https://script.google.com/macros/s/AKfycbxWdHV6fckb2blvMJjMpwNlsydj5txMHEAWadm_2UgG-dgnkyaouxmoIcTkN1uwxKRa/exec", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: data
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert("Order placed successfully!");
+                console.log("Response from server:", data);
+                orderList.innerHTML = "";
+                order = [];
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error placing order. Please try again.");
             });
-
-            orders = [];
-            orderList.innerHTML = "";
         }
     </script>
 </body>
