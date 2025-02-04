@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Menu</title>
+    <title>Ansari Restaurant Menu</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,14 +24,25 @@
         #orderList {
             margin-top: 20px;
         }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>Restaurant Menu</h1>
+    <h1>Ansari Restaurant Menu</h1>
     <div class="menu" id="menu"></div>
     <h2>Your Order</h2>
     <ul id="orderList"></ul>
-
+    <input type="text" id="customerName" placeholder="Enter your name">
+    <input type="text" id="tableNumber" placeholder="Table Number">
+    <button onclick="submitOrder()">Submit Order</button>
+    
     <script>
         const menuItems = [
             { name: "Pizza", price: 200 },
@@ -43,63 +54,61 @@
             { name: "Soup", price: 110 },
             { name: "Grilled Chicken", price: 250 },
             { name: "Fish Curry", price: 300 },
-            { name: "Rice Bowl", price: 180 },
-            { name: "Noodles", price: 140 },
-            { name: "Dal Tadka", price: 130 },
-            { name: "Paneer Tikka", price: 220 },
-            { name: "Biryani", price: 250 },
-            { name: "Roti", price: 30 },
-            { name: "Dosa", price: 140 },
-            { name: "Ice Cream", price: 90 },
-            { name: "Gulab Jamun", price: 100 },
-            { name: "Cold Drink", price: 50 },
-            { name: "Coffee", price: 70 }
+            { name: "Rice Bowl", price: 180 }
         ];
 
         const menuContainer = document.getElementById("menu");
         const orderList = document.getElementById("orderList");
+        let orders = [];
 
-        // Populate the menu items
         menuItems.forEach(item => {
             const div = document.createElement("div");
             div.classList.add("item");
             div.textContent = `${item.name} - ₹${item.price}`;
-            div.onclick = () => addToOrder(item);  // Add item to the order
+            div.onclick = () => addToOrder(item);
             menuContainer.appendChild(div);
         });
 
         function addToOrder(item) {
-            const customerName = prompt("Enter your name:");
-            const tableNumber = prompt("Enter your table number:");
-            const quantity = prompt(`Enter quantity for ${item.name}:`);
+            orders.push(item);
+            const li = document.createElement("li");
+            li.textContent = `${item.name} - ₹${item.price}`;
+            orderList.appendChild(li);
+        }
 
-            if (!customerName || !tableNumber || !quantity) {
-                alert("Please fill all details.");
+        function submitOrder() {
+            const customerName = document.getElementById("customerName").value;
+            const tableNumber = document.getElementById("tableNumber").value;
+            
+            if (!customerName || !tableNumber || orders.length === 0) {
+                alert("Please enter your name, table number, and add items to order.");
                 return;
             }
 
-            const orderData = {
-                customerName: customerName,
-                tableNumber: tableNumber,
-                menuItem: item.name,
-                quantity: quantity,
-                price: item.price * quantity
-            };
+            orders.forEach(order => {
+                fetch("https://script.google.com/macros/s/AKfycbxWdHV6fckb2blvMJjMpwNlsydj5txMHEAWadm_2UgG-dgnkyaouxmoIcTkN1uwxKRa/exec", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        customerName: customerName,
+                        tableNumber: tableNumber,
+                        menuItem: order.name,
+                        quantity: 1,
+                        price: order.price
+                    })
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Order Sent: ", data);
+                    alert("Order successfully placed!");
+                })
+                .catch(error => console.error("Error:", error));
+            });
 
-            fetch("YOUR_GOOGLE_SHEET_API_URL_HERE", {
-                method: "POST",
-                body: JSON.stringify(orderData),
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => response.text())
-            .then(data => alert("Order placed successfully!"))
-            .catch(error => console.error("Error:", error));
-
-            const li = document.createElement("li");
-            li.textContent = `${item.name} - ₹${item.price} x ${quantity}`;
-            orderList.appendChild(li);
+            orders = [];
+            orderList.innerHTML = "";
         }
     </script>
 </body>
