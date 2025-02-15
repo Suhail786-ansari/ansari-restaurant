@@ -3,72 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Menu</title>
+    <title>Ansari Restaurant Menu</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        .menu {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 10px;
-            width: 200px;
-            cursor: pointer;
-        }
-        #orderList {
-            margin-top: 20px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .menu { display: flex; flex-wrap: wrap; justify-content: center; }
+        .item { border: 1px solid #ddd; padding: 15px; margin: 10px; width: 200px; cursor: pointer; }
+        #orderList { margin-top: 20px; }
+        button { margin-top: 10px; padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1>Restaurant Menu</h1>
-    
-    <label for="name">Name:</label>
-    <input type="text" id="name" placeholder="Enter your name">
-    
-    <label for="table">Table Number:</label>
-    <input type="text" id="table" placeholder="Enter table number">
-    
+    <h1>Ansari Restaurant Menu</h1>
+    <label>Table Number: <input type="text" id="tableNumber" placeholder="Enter Table Number"></label>
     <div class="menu" id="menu"></div>
     <h2>Your Order</h2>
     <ul id="orderList"></ul>
-    
-    <button onclick="placeOrder()">Submit Order</button>
+    <button onclick="submitOrder()">Submit Order</button>
+    <p id="responseMsg"></p>
 
     <script>
         const menuItems = [
-            { name: "Pizza", price: 200 },
-            { name: "Burger", price: 100 },
-            { name: "Pasta", price: 150 },
-            { name: "Salad", price: 120 },
-            { name: "Sandwich", price: 90 },
-            { name: "French Fries", price: 80 },
-            { name: "Soup", price: 110 },
-            { name: "Grilled Chicken", price: 250 },
-            { name: "Fish Curry", price: 300 },
-            { name: "Rice Bowl", price: 180 },
-            { name: "Noodles", price: 140 },
-            { name: "Dal Tadka", price: 130 },
-            { name: "Paneer Tikka", price: 220 },
-            { name: "Biryani", price: 250 },
-            { name: "Roti", price: 30 },
-            { name: "Dosa", price: 140 },
-            { name: "Ice Cream", price: 90 },
-            { name: "Gulab Jamun", price: 100 },
-            { name: "Cold Drink", price: 50 },
-            { name: "Coffee", price: 70 }
+            { name: "Pizza", price: 200 }, { name: "Burger", price: 100 },
+            { name: "Pasta", price: 150 }, { name: "Salad", price: 120 },
+            { name: "Sandwich", price: 90 }, { name: "French Fries", price: 80 },
+            { name: "Soup", price: 110 }, { name: "Grilled Chicken", price: 250 },
+            { name: "Fish Curry", price: 300 }, { name: "Rice Bowl", price: 180 }
         ];
 
         const menuContainer = document.getElementById("menu");
         const orderList = document.getElementById("orderList");
+        let order = [];
 
-        // Populate the menu items
         menuItems.forEach(item => {
             const div = document.createElement("div");
             div.classList.add("item");
@@ -78,45 +43,45 @@
         });
 
         function addToOrder(item) {
-            const li = document.createElement("li");
-            li.textContent = `${item.name} - ₹${item.price}`;
-            orderList.appendChild(li);
+            order.push(item);
+            updateOrderList();
         }
 
-        function placeOrder() {
-            const name = document.getElementById("name").value;
-            const table = document.getElementById("table").value;
-            const orderItems = Array.from(document.querySelectorAll("#orderList li")).map(item => item.textContent);
+        function updateOrderList() {
+            orderList.innerHTML = "";
+            order.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = `${item.name} - ₹${item.price}`;
+                orderList.appendChild(li);
+            });
+        }
 
-            if (!name || !table || orderItems.length === 0) {
-                alert("Please enter name, table number, and select items!");
+        function submitOrder() {
+            const tableNumber = document.getElementById("tableNumber").value;
+            if (!tableNumber || order.length === 0) {
+                document.getElementById("responseMsg").textContent = "Please enter table number and select items.";
                 return;
             }
 
-            const apiUrl = "https://script.google.com/macros/s/AKfycbz2JYl7eHAq3FFQZpt38hmmB9DnaL2jTT-k-Eno71T9mjAUfj0Hswf2js8mG_pW57wwYw/exec";
-
             const orderData = {
-                name: name,
-                table: table,
-                order: orderItems
+                table: tableNumber,
+                items: order.map(item => item.name).join(", "),
+                total: order.reduce((sum, item) => sum + item.price, 0)
             };
 
-            fetch(apiUrl, {
+            fetch("https://script.google.com/macros/s/AKfycbz2JYl7eHAq3FFQZpt38hmmB9DnaL2jTT-k-Eno71T9mjAUfj0Hswf2js8mG_pW57wwYw/exec", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(orderData)
             })
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
-                if (data.status === "success") {
-                    alert("Order placed successfully!");
-                    document.getElementById("orderList").innerHTML = ""; // Clear the order list
-                } else {
-                    alert("Error placing order: " + data.message);
-                }
+                document.getElementById("responseMsg").textContent = data;
+                order = [];
+                updateOrderList();
             })
             .catch(error => {
-                alert("Error placing order: " + error);
+                document.getElementById("responseMsg").textContent = "Error placing order.";
             });
         }
     </script>
